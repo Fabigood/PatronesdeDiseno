@@ -8,8 +8,8 @@ Este proyecto fue refactorizado para evidenciar la aplicación de buenas prácti
 ### Links para entregar
 
 - **Link del código en Git:** https://github.com/Fabigood/Fidelidad-APP-Supabase
-- **Link del video explicativo:** (https://youtu.be/vCUOdhLW-SY)
-- **Link del proyecto deployado:** colocar aquí el enlace final de Vercel/Render. El backend configurado por defecto apunta a `https://fidelidad-app-supabase.onrender.com/api`.
+- **Link del video explicativo:** https://youtu.be/vCUOdhLW-SY
+- **Link del proyecto deployado:** https://patronesde-diseno.vercel.app/admin/dashboard
 
 ### Principios SOLID aplicados
 
