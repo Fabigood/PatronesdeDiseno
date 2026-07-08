@@ -6,6 +6,7 @@ export const HOY = new Date().toISOString().slice(0, 10)
 export const state = reactive({
   clientes: [],
   catalogo: [],
+  resumen: null,
   loading: false,
   error: ''
 })
@@ -44,6 +45,22 @@ export async function cargarDatos() {
   } catch (err) {
     state.error = err.response?.data?.error || 'No se pudieron cargar los datos'
     console.error(err)
+  } finally {
+    state.loading = false
+  }
+}
+export async function cargarResumenAdministrativo() {
+  state.loading = true
+  state.error = ''
+
+  try {
+    const { data } = await api.get('/fidelidad/resumen')
+    state.resumen = data || null
+    return state.resumen
+  } catch (err) {
+    state.error = err.response?.data?.error || 'No se pudo cargar el resumen administrativo'
+    console.error(err)
+    return null
   } finally {
     state.loading = false
   }

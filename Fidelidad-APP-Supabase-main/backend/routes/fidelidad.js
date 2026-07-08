@@ -3,6 +3,9 @@ const router = express.Router();
 const asyncHandler = require('../utils/asyncHandler');
 const { fidelidadController } = require('../core/container');
 
+router.get('/resumen', asyncHandler(fidelidadController.getResumen));
+
+
 router.get('/clientes', asyncHandler(fidelidadController.listClientes));
 router.post('/clientes', asyncHandler(fidelidadController.createCliente));
 router.put('/clientes/:id', asyncHandler(fidelidadController.updateCliente));

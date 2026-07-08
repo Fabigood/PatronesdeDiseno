@@ -8,11 +8,15 @@
       <span class="date-pill">{{ fechaActual }}</span>
     </div>
 
+    <p v-if="state.error" class="soft-link">{{ state.error }}</p>
+
     <div class="stats-grid">
-      <article class="stat-card"><span>Clientes totales</span><strong>{{ clientes.length }}</strong></article>
-      <article class="stat-card"><span>Compras registradas</span><strong>{{ totalCompras }}</strong></article>
+      <article class="stat-card"><span>Clientes totales</span><strong>{{ resumen.totalClientes }}</strong></article>
+      <article class="stat-card"><span>Compras registradas</span><strong>{{ resumen.totalCompras }}</strong></article>
+      <article class="stat-card"><span>Puntos generados</span><strong>{{ resumen.puntosGenerados }}</strong></article>
       <article class="stat-card danger"><span>En riesgo</span><strong>{{ clientesRiesgo.length }}</strong></article>
-      <article class="stat-card"><span>Prob. retorno prom.</span><strong>{{ retornoPromedio }}%</strong></article>
+      <article class="stat-card"><span>Prob. retorno prom.</span><strong>{{ resumen.retornoPromedio }}%</strong></article>
+      <article class="stat-card"><span>Ticket promedio</span><strong>${{ resumen.ticketPromedio.toFixed(2) }}</strong></article>
     </div>
 
     <div class="dashboard-grid">
@@ -29,14 +33,14 @@
         <h2>Clientes en riesgo</h2>
         <div class="risk-row" v-for="c in clientesRiesgo" :key="c.id">
           <strong>{{ c.nombre }}</strong>
-          <span>{{ c.probabilidadRetorno }}% retorno</span>
+          <span>{{ c.probabilidadRetorno }}% retorno · {{ c.estado }}</span>
         </div>
         <p v-if="!clientesRiesgo.length" class="soft-link">No hay clientes en riesgo.</p>
       </article>
     </div>
 
     <article class="panel-card table-card">
-      <h2>Últimas compras registradas</h2>
+      <h2>Últimas compras registradas desde API JSON</h2>
       <table>
         <thead>
           <tr>
@@ -44,64 +48,71 @@
             <th>Monto</th>
             <th>Fecha</th>
             <th>Puntos</th>
-            <th>Estado</th>
+            <th>Origen</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="compra in ultimasCompras" :key="compra.key">
+          <tr v-for="compra in ultimasCompras" :key="compra.id">
             <td>{{ compra.cliente }}</td>
             <td>${{ compra.monto.toFixed(2) }}</td>
-            <td>{{ compra.fecha }}</td>
-            <td>{{ Math.floor(compra.monto) }} pts</td>
-            <td><span class="status" :class="compra.estado === 'Activo' ? 'ok' : 'warn'">{{ compra.estado }}</span></td>
+            <td>{{ formatDate(compra.fecha) }}</td>
+            <td>{{ compra.puntosGenerados }} pts</td>
+            <td><span class="status ok">API JSON</span></td>
           </tr>
         </tbody>
       </table>
     </article>
   </section>
 </template>
+
 <script>
-import { cargarDatos, getClientesAnalizados, nivelClass, formatDate } from '../data/fidelidadStore'
+import { state, cargarResumenAdministrativo, nivelClass, formatDate } from '../data/fidelidadStore'
+
+const resumenVacio = {
+  totalClientes: 0,
+  totalCompras: 0,
+  puntosGenerados: 0,
+  recompensasDisponibles: 0,
+  recompensasEntregadas: 0,
+  retornoPromedio: 0,
+  ticketPromedio: 0,
+  clientesPorNivel: [],
+  clientesEnRiesgo: [],
+  ultimasCompras: []
+}
 
 export default {
   name: 'Dashboard',
+  data() {
+    return { state }
+  },
   mounted() {
-    cargarDatos()
+    cargarResumenAdministrativo()
   },
   computed: {
     fechaActual() {
       return new Date().toLocaleDateString('es-EC')
     },
-    clientes() {
-      return getClientesAnalizados()
-    },
-    totalCompras() {
-      return this.clientes.reduce((total, c) => total + c.totalCompras, 0)
-    },
-    retornoPromedio() {
-      if (!this.clientes.length) return 0
-      return Math.round(this.clientes.reduce((t, c) => t + c.probabilidadRetorno, 0) / this.clientes.length)
+    resumen() {
+      return this.state.resumen || resumenVacio
     },
     clientesRiesgo() {
-      return this.clientes.filter(c => c.estado !== 'Activo')
+      return this.resumen.clientesEnRiesgo || []
     },
     niveles() {
-      const base = ['Bronce', 'Plata', 'Oro']
-      return base.map(nombre => {
-        const total = this.clientes.filter(c => c.nivel === nombre).length
-        return { nombre, total, clase: nivelClass(nombre), porcentaje: this.clientes.length ? Math.round((total / this.clientes.length) * 100) : 0 }
-      })
+      return (this.resumen.clientesPorNivel || []).map(item => ({
+        nombre: item.nivel,
+        total: item.total,
+        porcentaje: item.porcentaje,
+        clase: nivelClass(item.nivel)
+      }))
     },
     ultimasCompras() {
-      return this.clientes.flatMap(c => c.compras.map(compra => ({
-        key: `${c.id}-${compra.id}`,
-        cliente: c.nombre,
-        monto: Number(compra.monto),
-        fechaISO: compra.fecha,
-        fecha: formatDate(compra.fecha),
-        estado: c.estado
-      }))).sort((a, b) => new Date(b.fechaISO) - new Date(a.fechaISO)).slice(0, 6)
+      return this.resumen.ultimasCompras || []
     }
+  },
+  methods: {
+    formatDate
   }
 }
 </script>

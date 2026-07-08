@@ -183,7 +183,150 @@ class FidelidadService {
       throw new AppError('La recompensa seleccionada no existe', 400);
     }
   }
+async getResumenAdministrativo() {
+  const [clientes, compras, recompensas, reclamos] = await Promise.all([
+    this.clienteRepository.findAll(),
+    this.compraRepository.findAllOrdered(),
+    this.recompensaRepository.findAll(),
+    this.reclamoRepository.findAllWithReward()
+  ]);
 
+  const clientesDetalle = clientes.map((cliente) => this.buildClienteDetalle(cliente, compras, reclamos));
+  const clientesAnalizados = clientesDetalle.map((cliente) => this.analizarEstadoCliente(cliente));
+
+  const puntosGenerados = compras.reduce(
+    (total, compra) => total + Number(compra.puntos_generados || 0),
+    0
+  );
+
+  const totalVentas = compras.reduce(
+    (total, compra) => total + Number(compra.monto || 0),
+    0
+  );
+
+  return {
+    fechaGeneracion: new Date().toISOString(),
+    totalClientes: clientes.length,
+    totalCompras: compras.length,
+    totalVentas: Number(totalVentas.toFixed(2)),
+    ticketPromedio: compras.length ? Number((totalVentas / compras.length).toFixed(2)) : 0,
+    puntosGenerados,
+    recompensasDisponibles: recompensas.filter((recompensa) => Boolean(recompensa.activo)).length,
+    recompensasEntregadas: reclamos.length,
+    retornoPromedio: clientesAnalizados.length
+      ? Math.round(
+          clientesAnalizados.reduce((total, cliente) => total + cliente.probabilidadRetorno, 0) /
+            clientesAnalizados.length
+        )
+      : 0,
+    clientesPorNivel: this.getClientesPorNivel(clientesDetalle),
+    clientesEnRiesgo: clientesAnalizados
+      .filter((cliente) => cliente.estado !== 'Activo')
+      .slice(0, 5)
+      .map((cliente) => ({
+        id: cliente.id,
+        nombre: cliente.nombre,
+        estado: cliente.estado,
+        probabilidadRetorno: cliente.probabilidadRetorno,
+        ultimaCompra: cliente.ultimaCompra
+      })),
+    ultimasCompras: this.getUltimasCompras(clientes, compras)
+  };
+}
+
+getClientesPorNivel(clientesDetalle) {
+  const niveles = ['Bronce', 'Plata', 'Oro'];
+
+  return niveles.map((nivel) => {
+    const total = clientesDetalle.filter((cliente) => cliente.nivel === nivel).length;
+    return {
+      nivel,
+      total,
+      porcentaje: clientesDetalle.length ? Math.round((total / clientesDetalle.length) * 100) : 0
+    };
+  });
+}
+
+getUltimasCompras(clientes, compras) {
+  const clientesPorId = new Map(clientes.map((cliente) => [Number(cliente.id), cliente]));
+
+  return [...compras]
+    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha) || Number(b.id) - Number(a.id))
+    .slice(0, 6)
+    .map((compra) => ({
+      id: compra.id,
+      clienteId: compra.cliente_id,
+      cliente: clientesPorId.get(Number(compra.cliente_id))?.nombre || 'Cliente no registrado',
+      monto: Number(compra.monto),
+      fecha: formatFecha(compra.fecha),
+      puntosGenerados: Number(compra.puntos_generados || 0)
+    }));
+}
+
+analizarEstadoCliente(cliente) {
+  const compras = [...(cliente.compras || [])].sort(
+    (a, b) => new Date(a.fecha) - new Date(b.fecha)
+  );
+
+  if (!compras.length) {
+    return {
+      ...cliente,
+      estado: 'Sin datos',
+      probabilidadRetorno: 20,
+      ultimaCompra: null
+    };
+  }
+
+  if (compras.length < 2) {
+    return {
+      ...cliente,
+      estado: 'En observación',
+      probabilidadRetorno: 45,
+      ultimaCompra: compras[compras.length - 1].fecha
+    };
+  }
+
+  const intervalo = this.calcularIntervaloPromedio(compras);
+  const ultimaCompra = compras[compras.length - 1].fecha;
+  const diasDesdeUltima = this.diffDays(ultimaCompra, new Date().toISOString().slice(0, 10));
+
+  let estado = 'Activo';
+  let probabilidadRetorno = 90;
+
+  if (diasDesdeUltima > intervalo * 2.2) {
+    estado = 'Inactivo';
+    probabilidadRetorno = 15;
+  } else if (diasDesdeUltima > intervalo * 1.5) {
+    estado = 'En riesgo';
+    probabilidadRetorno = 35;
+  } else if (diasDesdeUltima > intervalo) {
+    estado = 'En riesgo';
+    probabilidadRetorno = 60;
+  }
+
+  return {
+    ...cliente,
+    estado,
+    probabilidadRetorno,
+    ultimaCompra
+  };
+}
+
+calcularIntervaloPromedio(compras) {
+  let totalDias = 0;
+
+  for (let i = 1; i < compras.length; i += 1) {
+    totalDias += this.diffDays(compras[i - 1].fecha, compras[i].fecha);
+  }
+
+  return totalDias / (compras.length - 1);
+}
+
+diffDays(fechaInicio, fechaFin) {
+  const inicio = new Date(`${String(fechaInicio).slice(0, 10)}T00:00:00`);
+  const fin = new Date(`${String(fechaFin).slice(0, 10)}T00:00:00`);
+  return Math.round((fin - inicio) / 86400000);
+}
   sortByNivelThenId(a, b) {
     const nivelA = ORDEN_NIVEL[a.nivel] || 4;
     const nivelB = ORDEN_NIVEL[b.nivel] || 4;

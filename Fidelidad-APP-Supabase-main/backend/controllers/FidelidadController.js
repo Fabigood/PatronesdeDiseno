@@ -4,12 +4,36 @@ class FidelidadController {
     this.fidelidadService = fidelidadService;
   }
 
+  getResumen = async (req, res) => {
+    res.json(await this.fidelidadService.getResumenAdministrativo());
+  };
+
+  getResumenPublico = async (req, res) => {
+    const resumen = await this.fidelidadService.getResumenAdministrativo();
+
+    res.json({
+      fechaGeneracion: resumen.fechaGeneracion,
+      totalClientes: resumen.totalClientes,
+      totalCompras: resumen.totalCompras,
+      totalVentas: resumen.totalVentas,
+      ticketPromedio: resumen.ticketPromedio,
+      puntosGenerados: resumen.puntosGenerados,
+      recompensasDisponibles: resumen.recompensasDisponibles,
+      recompensasEntregadas: resumen.recompensasEntregadas,
+      retornoPromedio: resumen.retornoPromedio,
+      clientesPorNivel: resumen.clientesPorNivel,
+      arquitectura: 'API JSON consumida por frontend Vue/Vite',
+      nota: 'Resumen público para evidencia académica, sin datos sensibles de clientes'
+    });
+  };
+
   listClientes = async (req, res) => {
     res.json(await this.fidelidadService.getClientesConDetalle());
   };
 
   createCliente = async (req, res) => {
     const cliente = await this.clienteService.create(req.body);
+
     res.status(201).json({
       ...cliente,
       puntos: 0,
