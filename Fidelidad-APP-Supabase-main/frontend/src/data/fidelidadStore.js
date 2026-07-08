@@ -54,7 +54,7 @@ export async function cargarResumenAdministrativo() {
   state.error = ''
 
   try {
-    const { data } = await api.get('/fidelidad/resumen')
+    const { data } = await api.get('/fidelidad/resumen-publico')
     state.resumen = data || null
     return state.resumen
   } catch (err) {
