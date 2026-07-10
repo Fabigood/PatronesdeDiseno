@@ -39,35 +39,12 @@
       </article>
     </div>
 
-    <article class="panel-card table-card">
-      <h2>Últimas compras registradas desde API JSON</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Monto</th>
-            <th>Fecha</th>
-            <th>Puntos</th>
-            <th>Origen</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="compra in ultimasCompras" :key="compra.id">
-            <td>{{ compra.cliente }}</td>
-            <td>${{ compra.monto.toFixed(2) }}</td>
-            <td>{{ formatDate(compra.fecha) }}</td>
-            <td>{{ compra.puntosGenerados }} pts</td>
-            <td><span class="status ok">API JSON</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </article>
+  
   </section>
 </template>
 
 <script>
-import { state, cargarResumenAdministrativo, nivelClass, formatDate } from '../data/fidelidadStore'
-
+import { state, cargarResumenAdministrativo, nivelClass } from '../data/fidelidadStore'
 const resumenVacio = {
   totalClientes: 0,
   totalCompras: 0,
