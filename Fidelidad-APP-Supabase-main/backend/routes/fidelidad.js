@@ -10,6 +10,7 @@ router.get('/clientes', asyncHandler(fidelidadController.listClientes));
 router.post('/clientes', asyncHandler(fidelidadController.createCliente));
 router.put('/clientes/:id', asyncHandler(fidelidadController.updateCliente));
 router.delete('/clientes/:id', asyncHandler(fidelidadController.deleteCliente));
+router.post('/clientes/:id/tarjeta', asyncHandler(fidelidadController.enviarTarjeta));
 
 router.post('/compras', asyncHandler(fidelidadController.registrarCompra));
 

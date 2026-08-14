@@ -7,7 +7,11 @@
         <p>{{ cliente.email }}</p>
       </div>
       <span class="status" :class="cliente.estado === 'Activo' ? 'ok' : 'warn'">{{ cliente.estado }}</span>
+      <button class="primary-btn" :disabled="enviando" @click="enviarTarjetaCliente">
+        {{ enviando ? 'Enviando…' : 'Enviar tarjeta' }}
+      </button>
     </div>
+    <p v-if="mensajeTarjeta" class="tarjeta-mensaje" :class="{ error: errorTarjeta }">{{ mensajeTarjeta }}</p>
 
     <div class="stats-grid four">
       <article class="stat-card"><span>Puntos acumulados</span><strong>{{ cliente.puntos }}</strong></article>
@@ -46,10 +50,17 @@
 </template>
 
 <script>
-import { cargarDatos, getCliente, analizarCliente, comprasOrdenadas, formatDate } from '../data/fidelidadStore'
+import { cargarDatos, getCliente, analizarCliente, comprasOrdenadas, formatDate, enviarTarjeta } from '../data/fidelidadStore'
 
 export default {
   name: 'ClientePerfil',
+  data() {
+    return {
+      enviando: false,
+      mensajeTarjeta: '',
+      errorTarjeta: false
+    }
+  },
   mounted() {
     cargarDatos()
   },
@@ -68,7 +79,32 @@ export default {
     formatDate,
     iniciales(nombre) {
       return String(nombre).split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase()
+    },
+    async enviarTarjetaCliente() {
+      this.enviando = true
+      this.mensajeTarjeta = ''
+      this.errorTarjeta = false
+      try {
+        await enviarTarjeta(this.cliente.id)
+        this.mensajeTarjeta = `Tarjeta enviada a ${this.cliente.email}`
+      } catch (err) {
+        this.errorTarjeta = true
+        this.mensajeTarjeta = err?.response?.data?.error || 'No se pudo enviar la tarjeta de fidelidad'
+      } finally {
+        this.enviando = false
+      }
     }
   }
 }
 </script>
+
+<style scoped>
+.tarjeta-mensaje {
+  margin: -8px 0 16px;
+  color: #1e8449;
+  font-size: 0.875rem;
+}
+.tarjeta-mensaje.error {
+  color: #c0392b;
+}
+</style>

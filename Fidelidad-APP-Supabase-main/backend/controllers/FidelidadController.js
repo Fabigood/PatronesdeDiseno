@@ -1,7 +1,8 @@
 class FidelidadController {
-  constructor({ clienteService, fidelidadService }) {
+  constructor({ clienteService, fidelidadService, tarjetaFidelidadService }) {
     this.clienteService = clienteService;
     this.fidelidadService = fidelidadService;
+    this.tarjetaFidelidadService = tarjetaFidelidadService;
   }
 
   getResumen = async (req, res) => {
@@ -34,13 +35,26 @@ class FidelidadController {
   createCliente = async (req, res) => {
     const cliente = await this.clienteService.create(req.body);
 
+    let tarjetaEnviada = false;
+    try {
+      await this.tarjetaFidelidadService.enviarTarjeta(cliente.id);
+      tarjetaEnviada = true;
+    } catch (err) {
+      console.error('No se pudo enviar la tarjeta de fidelidad automáticamente:', err.message);
+    }
+
     res.status(201).json({
       ...cliente,
       puntos: 0,
       nivel: this.fidelidadService.levelStrategy.calculate(0),
       compras: [],
-      recompensasEntregadas: []
+      recompensasEntregadas: [],
+      tarjetaEnviada
     });
+  };
+
+  enviarTarjeta = async (req, res) => {
+    res.json(await this.tarjetaFidelidadService.enviarTarjeta(req.params.id));
   };
 
   updateCliente = async (req, res) => {

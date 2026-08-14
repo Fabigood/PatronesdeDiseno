@@ -30,6 +30,18 @@ class FidelidadService {
     return clientes.map((cliente) => this.buildClienteDetalle(cliente, compras, reclamos));
   }
 
+  async getClienteDetalle(id) {
+    const clienteId = this.validateId(id, 'Cliente inválido');
+    const clientes = await this.getClientesConDetalle();
+    const cliente = clientes.find((item) => Number(item.id) === clienteId);
+
+    if (!cliente) {
+      throw new AppError('Cliente no encontrado', 404);
+    }
+
+    return cliente;
+  }
+
   async registrarCompra(payload) {
     const clienteId = this.validateId(payload?.cliente_id, 'Datos de compra inválidos');
     const monto = Number(payload?.monto);

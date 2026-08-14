@@ -35,6 +35,7 @@
         </p>
 
         <div v-if="errorGeneral" class="alert-error">⚠ {{ errorGeneral }}</div>
+        <div v-if="mensajeExito" class="alert-success">✔ {{ mensajeExito }}</div>
 
         <div class="actions-row">
           <button class="primary-btn" @click="guardar" :disabled="guardando">
@@ -71,6 +72,9 @@
               <td class="row-actions">
                 <button @click="$router.push('/admin/clientes/' + c.id)">Ver</button>
                 <button @click="editar(c)">Editar</button>
+                <button :disabled="enviandoId === c.id" @click="enviarTarjetaCliente(c)">
+                  {{ enviandoId === c.id ? 'Enviando…' : 'Enviar tarjeta' }}
+                </button>
                 <button class="delete" @click="eliminar(c.id)">Eliminar</button>
               </td>
             </tr>
@@ -82,7 +86,7 @@
 </template>
 
 <script>
-import { cargarDatos, getClientesAnalizados, guardarCliente, eliminarCliente, nivelClass } from '../data/fidelidadStore'
+import { cargarDatos, getClientesAnalizados, guardarCliente, eliminarCliente, enviarTarjeta, nivelClass } from '../data/fidelidadStore'
 
 export default {
   name: 'Clientes',
@@ -93,7 +97,9 @@ export default {
       editando: null,
       guardando: false,
       errores: { nombre: '', email: '' },
-      errorGeneral: ''
+      errorGeneral: '',
+      mensajeExito: '',
+      enviandoId: null
     }
   },
   mounted() {
@@ -114,6 +120,7 @@ export default {
     async guardar() {
       this.errores = { nombre: '', email: '' }
       this.errorGeneral = ''
+      this.mensajeExito = ''
 
       if (!this.form.nombre.trim()) {
         this.errores.nombre = 'El nombre es obligatorio'
@@ -125,9 +132,16 @@ export default {
       }
 
       this.guardando = true
+      const esNuevo = !this.form.id
       try {
-        await guardarCliente({ ...this.form })
+        const resultado = await guardarCliente({ ...this.form })
         this.cancelar()
+        if (esNuevo) {
+          this.mensajeExito = resultado?.tarjetaEnviada
+            ? 'Cliente creado y tarjeta de fidelidad enviada por correo.'
+            : 'Cliente creado, pero no se pudo enviar la tarjeta por correo (revisá la configuración de Brevo).'
+          setTimeout(() => { this.mensajeExito = '' }, 6000)
+        }
       } catch (err) {
         const data = err?.response?.data
         if (data) {
@@ -154,6 +168,20 @@ export default {
     async eliminar(id) {
       if (!confirm('¿Eliminar este cliente?')) return
       await eliminarCliente(id)
+    },
+    async enviarTarjetaCliente(c) {
+      this.errorGeneral = ''
+      this.mensajeExito = ''
+      this.enviandoId = c.id
+      try {
+        await enviarTarjeta(c.id)
+        this.mensajeExito = `Tarjeta enviada a ${c.email}`
+      } catch (err) {
+        this.errorGeneral = err?.response?.data?.error || 'No se pudo enviar la tarjeta de fidelidad'
+      } finally {
+        this.enviandoId = null
+        setTimeout(() => { this.mensajeExito = '' }, 6000)
+      }
     },
     cancelar() {
       this.editando = null
@@ -187,6 +215,15 @@ export default {
   background: #fdecea;
   border: 1px solid #e74c3c;
   color: #c0392b;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  margin-bottom: 10px;
+}
+.alert-success {
+  background: #eafaf1;
+  border: 1px solid #2ecc71;
+  color: #1e8449;
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 0.875rem;

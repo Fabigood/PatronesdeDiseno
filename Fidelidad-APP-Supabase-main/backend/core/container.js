@@ -7,6 +7,8 @@ const ReclamoRepository = require('../repositories/ReclamoRepository');
 const AuthService = require('../services/AuthService');
 const ClienteService = require('../services/ClienteService');
 const FidelidadService = require('../services/FidelidadService');
+const TarjetaFidelidadService = require('../services/TarjetaFidelidadService');
+const BrevoEmailProvider = require('../services/email/BrevoEmailProvider');
 const AuthController = require('../controllers/AuthController');
 const ClienteController = require('../controllers/ClienteController');
 const FidelidadController = require('../controllers/FidelidadController');
@@ -27,6 +29,12 @@ function buildContainer() {
     levelStrategy: new ThresholdLevelStrategy()
   };
 
+  const emailProvider = new BrevoEmailProvider({
+    apiKey: process.env.BREVO_API_KEY,
+    senderEmail: process.env.BREVO_SENDER_EMAIL,
+    senderName: process.env.BREVO_SENDER_NAME
+  });
+
   const services = {
     authService: new AuthService({
       userRepository: repositories.userRepository,
@@ -46,15 +54,22 @@ function buildContainer() {
     })
   };
 
+  services.tarjetaFidelidadService = new TarjetaFidelidadService({
+    fidelidadService: services.fidelidadService,
+    emailProvider
+  });
+
   return {
     ...repositories,
     ...strategies,
     ...services,
+    emailProvider,
     authController: new AuthController(services.authService),
     clienteController: new ClienteController(services.clienteService),
     fidelidadController: new FidelidadController({
       clienteService: services.clienteService,
-      fidelidadService: services.fidelidadService
+      fidelidadService: services.fidelidadService,
+      tarjetaFidelidadService: services.tarjetaFidelidadService
     })
   };
 }

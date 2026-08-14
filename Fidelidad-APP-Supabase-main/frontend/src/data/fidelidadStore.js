@@ -185,12 +185,19 @@ export async function registrarCompra(clienteId, monto, fecha = HOY) {
 
 export async function guardarCliente(payload) {
   const data = { nombre: payload.nombre, email: payload.email }
+  let resultado = null
   if (payload.id) {
-    await api.put(`/fidelidad/clientes/${payload.id}`, data)
+    resultado = await api.put(`/fidelidad/clientes/${payload.id}`, data)
   } else {
-    await api.post('/fidelidad/clientes', data)
+    resultado = await api.post('/fidelidad/clientes', data)
   }
   await cargarDatos()
+  return resultado.data
+}
+
+export async function enviarTarjeta(clienteId) {
+  const { data } = await api.post(`/fidelidad/clientes/${clienteId}/tarjeta`)
+  return data
 }
 
 export async function eliminarCliente(id) {
