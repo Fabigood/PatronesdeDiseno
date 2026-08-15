@@ -29,11 +29,13 @@
 </template>
 
 <script>
+import { clearToken } from '../utils/auth'
+
 export default {
   name: 'AdminLayout',
   methods: {
     logout() {
-      sessionStorage.removeItem('token')
+      clearToken()
       this.$router.push('/login')
     }
   }

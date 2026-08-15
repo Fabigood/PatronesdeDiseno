@@ -33,6 +33,7 @@
 
 <script>
 import api from '../services/api'
+import { saveToken } from '../utils/auth'
 
 export default {
   data() {
@@ -54,10 +55,10 @@ export default {
           password: this.password
         })
 
-        sessionStorage.setItem('token', res.data.token)
+        saveToken(res.data.token)
         this.$router.push('/admin/dashboard')
       } catch (err) {
-        this.error = 'Usuario o contraseña incorrectos'
+        this.error = err?.response?.data?.error || 'Usuario o contraseña incorrectos'
       } finally {
         this.loading = false
       }

@@ -1,15 +1,12 @@
 import axios from 'axios'
+import { getToken, clearToken } from '../utils/auth'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://fidelidad-app-supabase-backend.onrender.com/api'
 })
 
 api.interceptors.request.use((config) => {
-  const token =
-    sessionStorage.getItem('token') ||
-    localStorage.getItem('token') ||
-    localStorage.getItem('authToken') ||
-    localStorage.getItem('access_token')
+  const token = getToken()
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -17,5 +14,16 @@ api.interceptors.request.use((config) => {
 
   return config
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && window.location.pathname !== '/login') {
+      clearToken()
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
 
 export default api

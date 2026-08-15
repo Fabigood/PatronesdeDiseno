@@ -9,6 +9,7 @@ import Recompensas from '../views/Recompensas.vue'
 import CatalogoRegalos from '../views/CatalogoRegalos.vue'
 import Estadisticas from '../views/Estadisticas.vue'
 import Tarjetas from '../views/Tarjetas.vue'
+import { isAuthenticated } from '../utils/auth'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -38,10 +39,10 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const token = sessionStorage.getItem('token')
-  if (to.meta.requiresAuth && !token) {
+  const autenticado = isAuthenticated()
+  if (to.meta.requiresAuth && !autenticado) {
     next('/login')
-  } else if (to.path === '/login' && token) {
+  } else if (to.path === '/login' && autenticado) {
     next('/admin/dashboard')
   } else {
     next()
