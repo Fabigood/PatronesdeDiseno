@@ -11,7 +11,9 @@ router.post('/clientes', asyncHandler(fidelidadController.createCliente));
 router.put('/clientes/:id', asyncHandler(fidelidadController.updateCliente));
 router.delete('/clientes/:id', asyncHandler(fidelidadController.deleteCliente));
 router.post('/clientes/:id/tarjeta', asyncHandler(fidelidadController.enviarTarjeta));
+router.get('/clientes/:id/tarjeta/preview', asyncHandler(fidelidadController.previsualizarTarjetaCliente));
 router.get('/tarjetas', asyncHandler(fidelidadController.listTarjetasEnviadas));
+router.get('/tarjetas/:id/preview', asyncHandler(fidelidadController.previsualizarTarjetaEnviada));
 
 router.post('/compras', asyncHandler(fidelidadController.registrarCompra));
 

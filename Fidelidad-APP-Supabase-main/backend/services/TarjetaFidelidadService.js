@@ -1,3 +1,4 @@
+const AppError = require('../core/AppError');
 const { buildTarjetaHtml } = require('../utils/tarjetaTemplate');
 
 class TarjetaFidelidadService {
@@ -50,6 +51,32 @@ class TarjetaFidelidadService {
   async listPorCliente(clienteId) {
     await this.fidelidadService.getClienteDetalle(clienteId);
     return this.tarjetaRepository.findByClienteId(clienteId);
+  }
+
+  async previsualizarActual(clienteId) {
+    const cliente = await this.fidelidadService.getClienteDetalle(clienteId);
+
+    return buildTarjetaHtml({
+      id: cliente.id,
+      nombre: cliente.nombre,
+      nivel: cliente.nivel,
+      puntos: cliente.puntos
+    });
+  }
+
+  async previsualizarEnviada(tarjetaId) {
+    const tarjeta = await this.tarjetaRepository.findById(tarjetaId);
+
+    if (!tarjeta) {
+      throw new AppError('Tarjeta no encontrada', 404);
+    }
+
+    return buildTarjetaHtml({
+      id: tarjeta.cliente_id,
+      nombre: tarjeta.clientes?.nombre || 'Cliente eliminado',
+      nivel: tarjeta.nivel,
+      puntos: tarjeta.puntos
+    });
   }
 }
 

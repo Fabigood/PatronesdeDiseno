@@ -2,9 +2,9 @@ const AppError = require('../../core/AppError');
 
 class BrevoEmailProvider {
   constructor({ apiKey, senderEmail, senderName }) {
-    this.apiKey = apiKey;
-    this.senderEmail = senderEmail;
-    this.senderName = senderName || 'Fidelidad APP';
+    this.apiKey = String(apiKey || '').trim();
+    this.senderEmail = String(senderEmail || '').trim();
+    this.senderName = String(senderName || '').trim() || 'Fidelidad APP';
   }
 
   async send({ to, toName, subject, htmlContent }) {

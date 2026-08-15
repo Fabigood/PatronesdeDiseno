@@ -10,8 +10,17 @@
       <button class="primary-btn" :disabled="enviando" @click="enviarTarjetaCliente">
         {{ enviando ? 'Enviando…' : 'Enviar tarjeta' }}
       </button>
+      <button @click="verTarjeta">Vista previa</button>
     </div>
     <p v-if="mensajeTarjeta" class="tarjeta-mensaje" :class="{ error: errorTarjeta }">{{ mensajeTarjeta }}</p>
+
+    <TarjetaPreviewModal
+      :visible="previewVisible"
+      :html="previewHtml"
+      :cargando="previewCargando"
+      :error="previewError"
+      @close="previewVisible = false"
+    />
 
     <div class="stats-grid four">
       <article class="stat-card"><span>Puntos acumulados</span><strong>{{ cliente.puntos }}</strong></article>
@@ -50,15 +59,21 @@
 </template>
 
 <script>
-import { cargarDatos, getCliente, analizarCliente, comprasOrdenadas, formatDate, enviarTarjeta } from '../data/fidelidadStore'
+import { cargarDatos, getCliente, analizarCliente, comprasOrdenadas, formatDate, enviarTarjeta, previsualizarTarjetaCliente } from '../data/fidelidadStore'
+import TarjetaPreviewModal from '../components/TarjetaPreviewModal.vue'
 
 export default {
   name: 'ClientePerfil',
+  components: { TarjetaPreviewModal },
   data() {
     return {
       enviando: false,
       mensajeTarjeta: '',
-      errorTarjeta: false
+      errorTarjeta: false,
+      previewVisible: false,
+      previewHtml: '',
+      previewCargando: false,
+      previewError: ''
     }
   },
   mounted() {
@@ -92,6 +107,19 @@ export default {
         this.mensajeTarjeta = err?.response?.data?.error || 'No se pudo enviar la tarjeta de fidelidad'
       } finally {
         this.enviando = false
+      }
+    },
+    async verTarjeta() {
+      this.previewVisible = true
+      this.previewCargando = true
+      this.previewError = ''
+      this.previewHtml = ''
+      try {
+        this.previewHtml = await previsualizarTarjetaCliente(this.cliente.id)
+      } catch (err) {
+        this.previewError = err?.response?.data?.error || 'No se pudo cargar la vista previa'
+      } finally {
+        this.previewCargando = false
       }
     }
   }

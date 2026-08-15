@@ -75,6 +75,7 @@
                 <button :disabled="enviandoId === c.id" @click="enviarTarjetaCliente(c)">
                   {{ enviandoId === c.id ? 'Enviando…' : 'Enviar tarjeta' }}
                 </button>
+                <button @click="verTarjeta(c)">Vista previa</button>
                 <button class="delete" @click="eliminar(c.id)">Eliminar</button>
               </td>
             </tr>
@@ -82,14 +83,24 @@
         </table>
       </article>
     </div>
+
+    <TarjetaPreviewModal
+      :visible="previewVisible"
+      :html="previewHtml"
+      :cargando="previewCargando"
+      :error="previewError"
+      @close="previewVisible = false"
+    />
   </section>
 </template>
 
 <script>
-import { cargarDatos, getClientesAnalizados, guardarCliente, eliminarCliente, enviarTarjeta, nivelClass } from '../data/fidelidadStore'
+import { cargarDatos, getClientesAnalizados, guardarCliente, eliminarCliente, enviarTarjeta, previsualizarTarjetaCliente, nivelClass } from '../data/fidelidadStore'
+import TarjetaPreviewModal from '../components/TarjetaPreviewModal.vue'
 
 export default {
   name: 'Clientes',
+  components: { TarjetaPreviewModal },
   data() {
     return {
       filtro: '',
@@ -99,7 +110,11 @@ export default {
       errores: { nombre: '', email: '' },
       errorGeneral: '',
       mensajeExito: '',
-      enviandoId: null
+      enviandoId: null,
+      previewVisible: false,
+      previewHtml: '',
+      previewCargando: false,
+      previewError: ''
     }
   },
   mounted() {
@@ -181,6 +196,19 @@ export default {
       } finally {
         this.enviandoId = null
         setTimeout(() => { this.mensajeExito = '' }, 6000)
+      }
+    },
+    async verTarjeta(c) {
+      this.previewVisible = true
+      this.previewCargando = true
+      this.previewError = ''
+      this.previewHtml = ''
+      try {
+        this.previewHtml = await previsualizarTarjetaCliente(c.id)
+      } catch (err) {
+        this.previewError = err?.response?.data?.error || 'No se pudo cargar la vista previa'
+      } finally {
+        this.previewCargando = false
       }
     },
     cancelar() {

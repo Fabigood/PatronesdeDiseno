@@ -61,6 +61,16 @@ class FidelidadController {
     res.json(await this.tarjetaFidelidadService.listEnviadas());
   };
 
+  previsualizarTarjetaCliente = async (req, res) => {
+    const html = await this.tarjetaFidelidadService.previsualizarActual(req.params.id);
+    res.json({ html });
+  };
+
+  previsualizarTarjetaEnviada = async (req, res) => {
+    const html = await this.tarjetaFidelidadService.previsualizarEnviada(req.params.id);
+    res.json({ html });
+  };
+
   updateCliente = async (req, res) => {
     res.json(await this.clienteService.update(req.params.id, req.body));
   };

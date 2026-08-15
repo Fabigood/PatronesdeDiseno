@@ -27,6 +27,7 @@
             <th>Nivel</th>
             <th>Puntos al enviar</th>
             <th>Fecha de envío</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -38,24 +39,39 @@
             <td><span class="badge" :class="nivelClass(t.nivel)">{{ t.nivel }}</span></td>
             <td>{{ t.puntos }} pts</td>
             <td>{{ formatFechaHora(t.fechaEnvio) }}</td>
+            <td><button @click="verTarjeta(t)">Vista previa</button></td>
           </tr>
         </tbody>
       </table>
     </article>
+
+    <TarjetaPreviewModal
+      :visible="previewVisible"
+      :html="previewHtml"
+      :cargando="previewCargando"
+      :error="previewError"
+      @close="previewVisible = false"
+    />
   </section>
 </template>
 
 <script>
-import { listarTarjetasEnviadas, nivelClass } from '../data/fidelidadStore'
+import { listarTarjetasEnviadas, previsualizarTarjetaEnviada, nivelClass } from '../data/fidelidadStore'
+import TarjetaPreviewModal from '../components/TarjetaPreviewModal.vue'
 
 export default {
   name: 'Tarjetas',
+  components: { TarjetaPreviewModal },
   data() {
     return {
       filtro: '',
       tarjetas: [],
       cargando: true,
-      error: ''
+      error: '',
+      previewVisible: false,
+      previewHtml: '',
+      previewCargando: false,
+      previewError: ''
     }
   },
   computed: {
@@ -80,6 +96,19 @@ export default {
       if (!value) return 'Sin datos'
       const fecha = new Date(value)
       return fecha.toLocaleString('es', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    },
+    async verTarjeta(t) {
+      this.previewVisible = true
+      this.previewCargando = true
+      this.previewError = ''
+      this.previewHtml = ''
+      try {
+        this.previewHtml = await previsualizarTarjetaEnviada(t.id)
+      } catch (err) {
+        this.previewError = err?.response?.data?.error || 'No se pudo cargar la vista previa'
+      } finally {
+        this.previewCargando = false
+      }
     }
   }
 }

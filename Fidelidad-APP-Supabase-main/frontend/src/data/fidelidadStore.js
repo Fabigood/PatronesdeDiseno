@@ -205,6 +205,16 @@ export async function listarTarjetasEnviadas() {
   return data || []
 }
 
+export async function previsualizarTarjetaCliente(clienteId) {
+  const { data } = await api.get(`/fidelidad/clientes/${clienteId}/tarjeta/preview`)
+  return data.html
+}
+
+export async function previsualizarTarjetaEnviada(tarjetaId) {
+  const { data } = await api.get(`/fidelidad/tarjetas/${tarjetaId}/preview`)
+  return data.html
+}
+
 export async function eliminarCliente(id) {
   await api.delete(`/fidelidad/clientes/${id}`)
   await cargarDatos()
