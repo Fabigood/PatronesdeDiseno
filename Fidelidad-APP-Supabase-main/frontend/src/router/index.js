@@ -8,6 +8,7 @@ import ClientePerfil from '../views/ClientePerfil.vue'
 import Recompensas from '../views/Recompensas.vue'
 import CatalogoRegalos from '../views/CatalogoRegalos.vue'
 import Estadisticas from '../views/Estadisticas.vue'
+import Tarjetas from '../views/Tarjetas.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -24,7 +25,8 @@ const routes = [
       { path: 'registrar-compra', component: RegistrarCompra },
       { path: 'recompensas', component: Recompensas },
       { path: 'catalogo-regalos', component: CatalogoRegalos },
-      { path: 'estadisticas', component: Estadisticas }
+      { path: 'estadisticas', component: Estadisticas },
+      { path: 'tarjetas', component: Tarjetas }
     ]
   },
   { path: '/clientes', redirect: '/admin/clientes' }

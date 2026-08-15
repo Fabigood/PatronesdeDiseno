@@ -54,3 +54,13 @@ CREATE TABLE IF NOT EXISTS reclamos_recompensa (
 
 CREATE INDEX IF NOT EXISTS idx_compras_cliente ON compras(cliente_id);
 CREATE INDEX IF NOT EXISTS idx_reclamos_cliente ON reclamos_recompensa(cliente_id);
+
+CREATE TABLE IF NOT EXISTS tarjetas_fidelidad (
+  id SERIAL PRIMARY KEY,
+  cliente_id INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+  nivel VARCHAR(20) NOT NULL,
+  puntos INTEGER NOT NULL DEFAULT 0,
+  fecha_envio TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tarjetas_cliente ON tarjetas_fidelidad(cliente_id);

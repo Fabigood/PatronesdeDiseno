@@ -4,6 +4,7 @@ const ClienteRepository = require('../repositories/ClienteRepository');
 const CompraRepository = require('../repositories/CompraRepository');
 const RecompensaRepository = require('../repositories/RecompensaRepository');
 const ReclamoRepository = require('../repositories/ReclamoRepository');
+const TarjetaRepository = require('../repositories/TarjetaRepository');
 const AuthService = require('../services/AuthService');
 const ClienteService = require('../services/ClienteService');
 const FidelidadService = require('../services/FidelidadService');
@@ -21,7 +22,8 @@ function buildContainer() {
     clienteRepository: new ClienteRepository(supabase),
     compraRepository: new CompraRepository(supabase),
     recompensaRepository: new RecompensaRepository(supabase),
-    reclamoRepository: new ReclamoRepository(supabase)
+    reclamoRepository: new ReclamoRepository(supabase),
+    tarjetaRepository: new TarjetaRepository(supabase)
   };
 
   const strategies = {
@@ -56,7 +58,8 @@ function buildContainer() {
 
   services.tarjetaFidelidadService = new TarjetaFidelidadService({
     fidelidadService: services.fidelidadService,
-    emailProvider
+    emailProvider,
+    tarjetaRepository: repositories.tarjetaRepository
   });
 
   return {

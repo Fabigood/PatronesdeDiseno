@@ -12,6 +12,7 @@
       <nav class="menu">
         <RouterLink to="/admin/dashboard">Panel principal</RouterLink>
         <RouterLink to="/admin/clientes">Clientes</RouterLink>
+        <RouterLink to="/admin/tarjetas">Tarjetas enviadas</RouterLink>
         <RouterLink to="/admin/registrar-compra">Registrar compra</RouterLink>
         <RouterLink to="/admin/recompensas">Recompensas</RouterLink>
         <RouterLink to="/admin/catalogo-regalos">Catálogo de regalos</RouterLink>

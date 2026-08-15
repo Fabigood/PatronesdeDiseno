@@ -200,6 +200,11 @@ export async function enviarTarjeta(clienteId) {
   return data
 }
 
+export async function listarTarjetasEnviadas() {
+  const { data } = await api.get('/fidelidad/tarjetas')
+  return data || []
+}
+
 export async function eliminarCliente(id) {
   await api.delete(`/fidelidad/clientes/${id}`)
   await cargarDatos()

@@ -57,6 +57,10 @@ class FidelidadController {
     res.json(await this.tarjetaFidelidadService.enviarTarjeta(req.params.id));
   };
 
+  listTarjetasEnviadas = async (req, res) => {
+    res.json(await this.tarjetaFidelidadService.listEnviadas());
+  };
+
   updateCliente = async (req, res) => {
     res.json(await this.clienteService.update(req.params.id, req.body));
   };
